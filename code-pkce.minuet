@@ -1,0 +1,27 @@
+actors C=client, A=authz, R=resource, U=user, B=browser
+
+flow code+pkce {
+  given C: client_id, redirect_uri, scope="openid profile"
+  C: v = rand(64); ch = S256(v); st = rand(); n = rand()
+
+  C ~> A GET /authorize ?{
+    response_type="code", client_id, redirect_uri, scope,
+    state=st, nonce=n, code_challenge=ch, code_challenge_method=S256
+  }
+  A <~> U : authn, consent
+  A ~> C 302 redirect_uri ?{ code, state }
+  C: assert state == st
+
+  C => A POST /token ${
+    grant_type="authorization_code", code, redirect_uri, code_verifier=v
+  } {
+    <- 200 { access_token, id_token, refresh_token?, expires_in }
+    <- 400 { error=invalid_grant | invalid_client, error_description? } do fail
+  }
+  C: verify(id_token, nonce=n)
+
+  C => R GET /userinfo @{ Authorization="Bearer " + access_token } {
+    <- 200 { sub }
+    <- 401 @{ WWW-Authenticate }
+  }
+}

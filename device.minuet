@@ -1,0 +1,30 @@
+actors C=client, A=authz, U=user, B=browser
+
+flow device {
+  given C: client_id, scope="openid"
+
+  C => A POST /device_authorization ${ client_id, scope } {
+    <- 200 { device_code, user_code, verification_uri, verification_uri_complete?, expires_in, interval? }
+  }
+  C: interval = default(interval, 5s)
+  C <..> U : show(user_code, verification_uri)
+
+  par {
+    B => A GET verification_uri {
+      <- 200 body html(code_entry)
+    }
+    A <~> U : enter(user_code), authn, consent
+  } and {
+    loop within expires_in {
+      C: wait interval
+      C => A POST /token ${
+        grant_type="urn:ietf:params:oauth:grant-type:device_code", device_code, client_id
+      } {
+        <- 200 { access_token, id_token }                do break
+        <- 400 { error=authorization_pending }           do continue
+        <- 400 { error=slow_down }                       do interval = interval + 5s; continue
+        <- 400 { error=access_denied | expired_token }   do fail
+      }
+    }
+  }
+}

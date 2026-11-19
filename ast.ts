@@ -1,5 +1,5 @@
-import type { Span } from "./source";
-import type { DurationUnit, Method } from "./tokens";
+import type { Span } from "./source.js";
+import type { DurationUnit, Method } from "./tokens.js";
 
 /**
  * Every node has a span. A node that the `~>` expansion creates also has `origin`:
@@ -49,7 +49,9 @@ export interface Given extends AstNode {
 
 export interface Bind extends AstNode {
   name: string;
-  defaultValue?: Expr;
+  /** `name?`: the name is declared but can have no value (spec 5.1, 8.1). */
+  optional: boolean;
+  defaultValue?: Expr; // `name=expr`. Never set when `optional` is true.
 }
 
 export interface Local extends AstNode {
@@ -110,7 +112,7 @@ export interface Loop extends AstNode {
 export interface HttpRequest extends AstNode {
   kind: "request";
   method: Method;
-  target: Target;
+  target: RequestTarget;
   parts: Part[];
   replies?: Reply[];
 }
@@ -118,7 +120,7 @@ export interface HttpRequest extends AstNode {
 export interface HttpResponse extends AstNode {
   kind: "response";
   status: number;
-  target?: Target; // in a 3xx response, the Location
+  target?: RequestTarget; // in a 3xx response, the Location
   parts: Part[];
 }
 
@@ -134,7 +136,10 @@ export type StatusMatch =
   | { kind: "class"; digit: 1 | 2 | 3 | 4 | 5 } // 4xx
   | { kind: "else" };
 
-export type Target = PathTarget | VarTarget | ActorPathTarget;
+/** The target of a request or a response: a path or a variable. */
+export type RequestTarget = PathTarget | VarTarget;
+/** Inside an expression (a Url), a target can also be an actor and a path. */
+export type Target = RequestTarget | ActorPathTarget;
 export interface PathTarget extends AstNode {
   kind: "path";
   path: string; // "/token"
@@ -162,17 +167,19 @@ export type Part = MapPart | RawBodyPart;
 
 export interface MapNode extends AstNode {
   kind: "map";
-  entries: MapEntry[];
+  entries: Field[];
 }
-export type MapEntry = Field | Rest;
+/**
+ * In a message map (sender view): `value` is evaluated by the sender. Absent means read the
+ * sender's variable named `key`. The receiver binds `key`. The map is closed.
+ * In a reply map (requester view): absent means bind `key`. Present means the received
+ * value must equal `value`. The map is open: other keys are ignored.
+ */
 export interface Field extends AstNode {
   kind: "field";
   key: string; // NAME: may have capitals and hyphens
   optional: boolean; // `scope?`
-  value?: Expr; // `state=st`. Absent: bare key (send the variable, or bind it)
-}
-export interface Rest extends AstNode {
-  kind: "rest"; // `...`
+  value?: Expr; // `state=st`
 }
 
 // ------------------------------------------------------------------ actions
@@ -245,7 +252,7 @@ export interface Arg extends AstNode {
   name?: string; // verify(id_token, nonce=n)
   value: Expr;
 }
-/** A target with at least one `?{ }` or `#{ }` suffix. Example: A/authorize ?{ client_id }. */
+/** A target with zero or more `?{ }` or `#{ }` suffixes. Example: A/authorize ?{ client_id }. A bare variable is a Var, not a Url. */
 export interface Url extends AstNode {
   kind: "url";
   target: Target;

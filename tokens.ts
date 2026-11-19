@@ -1,4 +1,4 @@
-import type { Diagnostic, Span } from "./source";
+import type { Diagnostic, Span } from "./source.js";
 
 export const KEYWORDS = [
   "actors", "flow", "given", "assert", "wait", "until", "within",
@@ -17,7 +17,7 @@ export type DurationUnit = (typeof DURATION_UNITS)[number];
  * Punctuation and operators. The kind is the text itself.
  *
  * Match longest first, in this order:
- *   "<..>"  "<~>"  "..>"  "..."  "=>"  "~>"  "<-"  "=="  "!="
+ *   "<..>"  "<~>"  "..>"  "=>"  "~>"  "<-"  "=="  "!="
  * then the single characters.
  */
 export type PunctKind =
@@ -28,9 +28,7 @@ export type PunctKind =
   // operators
   | "=" | "+" | "|" | "==" | "!="
   // arrows
-  | "=>" | "~>" | "<~>" | "<..>" | "..>" | "<-"
-  // map rest entry
-  | "...";
+  | "=>" | "~>" | "<~>" | "<..>" | "..>" | "<-";
 
 /**
  * Token kinds without extra data.

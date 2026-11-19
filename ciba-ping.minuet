@@ -1,0 +1,26 @@
+actors C=client, A=authz, U=user
+
+flow ciba+ping {
+  given C: client_id, client_secret, login_hint, client_notification_token
+  given A: client_notification_endpoint
+  C: auth = basic(client_id, client_secret)
+
+  C => A POST /bc-authorize @{ Authorization=auth } ${
+    scope="openid", login_hint, client_notification_token
+  } {
+    <- 200 { auth_req_id, expires_in }
+    <- 400 { error=invalid_request | unknown_user_id } do fail
+  }
+  A <..> U : authn, consent
+  A => C POST client_notification_endpoint @{ Authorization="Bearer " + client_notification_token } {
+    auth_req_id
+  } {
+    <- 204
+  }
+  C => A POST /token @{ Authorization=auth } ${
+    grant_type="urn:openid:params:grant-type:ciba", auth_req_id
+  } {
+    <- 200 { access_token, id_token, refresh_token?, expires_in }
+    <- 400 { error=expired_token | access_denied } do fail
+  }
+}

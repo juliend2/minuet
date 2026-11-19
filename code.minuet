@@ -1,0 +1,27 @@
+actors C=client, A=authz, R=resource, U=user, B=browser
+
+// Authorization code flow, confidential client, no PKCE.
+flow code {
+  given C: client_id, client_secret, redirect_uri, scope="openid profile"
+  C: st = rand(); n = rand()
+
+  C ~> A GET /authorize ?{
+    response_type="code", client_id, redirect_uri, scope, state=st, nonce=n
+  }
+  A <~> U : authn, consent
+  alt {
+    A ~> C 302 redirect_uri ?{ code, state }
+  } or {
+    A ~> C 302 redirect_uri ?{ error=access_denied | login_required, state }
+    C: fail
+  }
+  C: assert state == st
+
+  C => A POST /token @{ Authorization=basic(client_id, client_secret) } ${
+    grant_type="authorization_code", code, redirect_uri
+  } {
+    <- 200 { access_token, id_token, refresh_token?, expires_in }
+    <- 400 { error=invalid_grant | invalid_client, error_description? } do fail
+  }
+  C: verify(id_token, nonce=n)
+}

@@ -1,0 +1,12 @@
+actors C=client, A=authz
+
+flow refresh {
+  given C: client_id, refresh_token, access_token
+  loop {
+    C: wait until expired(access_token)
+    C => A POST /token ${ grant_type="refresh_token", refresh_token, scope? } {
+      <- 200 { access_token, refresh_token? }
+      <- 400 { error=invalid_grant } do fail
+    }
+  }
+}

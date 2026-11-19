@@ -1,0 +1,13 @@
+actors C=client, A=authz, U=user, B=browser
+
+flow implicit {
+  given C: client_id, redirect_uri, scope="openid"
+  C: st = rand(); n = rand()
+
+  C ~> A GET /authorize ?{
+    response_type="id_token token", client_id, redirect_uri, scope, state=st, nonce=n
+  }
+  A <~> U : authn, consent
+  A ~> C 302 redirect_uri #{ id_token, access_token?, state }
+  C: assert state == st
+}

@@ -23,6 +23,7 @@ export type DiagnosticCode =
   // names
   | "E_UNDECLARED_ACTOR"
   | "E_BROWSER_NOT_DECLARED" // 4: a file that uses ~> must declare B
+  | "E_UNBOUND_VARIABLE" // 8.1: a variable has no value at the actor that uses it
   // checks (spec section 12)
   | "E_LOOP_CONTROL_OUTSIDE_LOOP" // break / continue
   | "E_HTTP_TO_HUMAN" // => to or from U
