@@ -1,27 +1,53 @@
+// Actors: each party gets a short capital name and a label (spec 4).
+// The label is for people only. B must be declared because the flow uses ~> (spec 4, 11).
 actors C=client, A=authz, R=resource, U=user, B=browser
 
 // Authorization code flow, confidential client, no PKCE.
 flow code {
+  // Values the client has before the flow starts. scope has a default (spec 5.1).
   given C: client_id, client_secret, redirect_uri, scope="openid profile"
+
+  // Local actions: the client makes a random state and nonce (spec 5.2).
   C: st = rand(); n = rand()
 
+  // Authorization request through the browser. ~> must use GET (spec 11.4).
+  // It expands to a 302 from C to B, then a GET from B to A (spec 11.1).
+  // ?{ } is the query string. state=st and nonce=n send local values (spec 8.1).
   C ~> A GET /authorize ?{
     response_type="code", client_id, redirect_uri, scope, state=st, nonce=n
   }
+
+  // The user logs in and gives consent. No HTTP message moves (spec 5.3).
   A <~> U : authn, consent
+
+  // Only one branch happens (spec 9.1).
   alt {
+    // Success: A redirects the browser back to redirect_uri.
+    // The received map binds code and state (spec 8.1, 11.2).
     A ~> C 302 redirect_uri ?{ code, state }
   } or {
+    // Error: error must match one of the two values (spec 8.2).
     A ~> C 302 redirect_uri ?{ error=access_denied | login_required, state }
+    // The flow ends with an error (spec 9.5).
     C: fail
   }
+
+  // CSRF check: the returned state must equal the state that C sent.
   C: assert state == st
 
+  // Token request, direct HTTP from C to A (spec 6).
+  // @{ } holds headers. The confidential client authenticates with HTTP Basic.
+  // ${ } holds the form-encoded body (spec 7.4).
   C => A POST /token @{ Authorization=basic(client_id, client_secret) } ${
     grant_type="authorization_code", code, redirect_uri
   } {
+    // Replies are tried from top to bottom (spec 8.4).
+    // refresh_token? can be absent (spec 8.1).
     <- 200 { access_token, id_token, refresh_token?, expires_in }
+    // A do clause runs instead of continuing to the next statement (spec 8.6).
     <- 400 { error=invalid_grant | invalid_client, error_description? } do fail
   }
+
+  // The client checks the ID token and its nonce. Named argument (spec 10.3).
   C: verify(id_token, nonce=n)
 }
