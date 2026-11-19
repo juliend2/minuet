@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { lex } from "../src/lexer.js";
-import type { Token } from "../src/tokens.js";
+import { lex } from "./lexer.js";
+import type { Token } from "./tokens.js";
 
 const kinds = (src: string): string[] => lex(src).tokens.map((t) => t.kind);
 const pairs = (src: string): string[] => lex(src).tokens.map((t) => `${t.kind}:${t.text}`);
@@ -105,7 +105,7 @@ test("empty input gives only eof", () => {
 
 // ------------------------------------------------------------ fixture tests
 
-const fixtureDir = new URL("../../fixtures/", import.meta.url);
+const fixtureDir = new URL("../fixtures/", import.meta.url);
 const fixtures = readdirSync(fixtureDir).filter((f) => f.endsWith(".minuet")).sort();
 
 /** Token kinds that each fixture must contain. */

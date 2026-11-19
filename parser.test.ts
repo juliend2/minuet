@@ -1,12 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { parse } from "../src/parser.js";
-import type { Span } from "../src/source.js";
+import { parse } from "./parser.js";
+import type { Span } from "./source.js";
 import type {
   Alt, Binary, Call, Choice, Const, Deliver, Dur, Flow, Given, HttpRequest, HttpResponse,
   Local, Loop, Message, Opt, Par, Program, Str, Talk, Url, Var, Wait,
-} from "../src/ast.js";
+} from "./ast.js";
 
 const HEAD = "actors C=client, A=authz, R=resource, U=user, B=browser\n";
 
@@ -20,7 +20,7 @@ const codes = (src: string): string[] => parse(src).diagnostics.map((d) => d.cod
 
 // ---------------------------------------------------------- fixture tests
 
-const fixtureDir = new URL("../../fixtures/", import.meta.url);
+const fixtureDir = new URL("../fixtures/", import.meta.url);
 const fixtures = readdirSync(fixtureDir).filter((f) => f.endsWith(".minuet")).sort();
 
 const flowNames: Record<string, string> = {
