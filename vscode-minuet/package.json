@@ -1,0 +1,35 @@
+{
+  "name": "minuet-vscode",
+  "displayName": "Minuet",
+  "description": "Syntax highlighting for the Minuet OIDC flow notation",
+  "version": "0.0.1",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "minuet",
+        "aliases": [
+          "Minuet",
+          "minuet"
+        ],
+        "extensions": [
+          ".minuet"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "minuet",
+        "scopeName": "source.minuet",
+        "path": "./syntaxes/minuet.tmLanguage.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Minuet",
+  "scopeName": "source.minuet",
+  "fileTypes": ["minuet"],
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#string" },
+    { "include": "#duration" },
+    { "include": "#status-class" },
+    { "include": "#number" },
+    { "include": "#arrow" },
+    { "include": "#sigil" },
+    { "include": "#method" },
+    { "include": "#keyword" },
+    { "include": "#path" },
+    { "include": "#actor-or-constant" },
+    { "include": "#operator" },
+    { "include": "#punctuation-brace" },
+    { "include": "#punctuation-paren" },
+    { "include": "#punctuation-other" },
+    { "include": "#identifier" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "//.*$",
+      "name": "comment.line.double-slash.minuet"
+    },
+    "string": {
+      "match": "\"[^\"]*\"",
+      "name": "string.quoted.double.minuet"
+    },
+    "duration": {
+      "match": "\\b[0-9]+(ms|s|m|h)\\b",
+      "name": "constant.numeric.duration.minuet"
+    },
+    "status-class": {
+      "match": "\\b[0-9]xx\\b",
+      "name": "constant.numeric.status.minuet"
+    },
+    "number": {
+      "match": "\\b[0-9]+\\b",
+      "name": "constant.numeric.minuet"
+    },
+    "arrow": {
+      "comment": "Longest-match-first, per spec section 6.",
+      "match": "<~>|<\\.\\.>|\\.\\.>|~>|=>|<-",
+      "name": "keyword.operator.arrow.minuet"
+    },
+    "sigil": {
+      "comment": "?{ #{ ${ @{ part markers, spec section 7.4.",
+      "match": "[?#$@](?=\\{)",
+      "name": "keyword.operator.sigil.minuet"
+    },
+    "method": {
+      "match": "\\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\\b",
+      "name": "support.function.method.minuet"
+    },
+    "keyword": {
+      "match": "\\b(actors|flow|given|assert|wait|until|within|break|continue|fail|alt|or|opt|par|and|loop|do|else|body)\\b",
+      "name": "keyword.control.minuet"
+    },
+    "path": {
+      "comment": "/segment/segment, spec section Appendix A: path rule.",
+      "match": "(?:/[A-Za-z0-9_.-]+)+",
+      "name": "string.unquoted.path.minuet"
+    },
+    "actor-or-constant": {
+      "comment": "ALLCAPS word: an actor name or a constant, spec sections 3.4 and 3.7.",
+      "match": "\\b[A-Z][A-Z0-9]*\\b",
+      "name": "entity.name.type.minuet"
+    },
+    "operator": {
+      "match": "==|!=|\\+|\\|",
+      "name": "keyword.operator.minuet"
+    },
+    "punctuation-brace": {
+      "match": "[{}]",
+      "name": "punctuation.section.block.minuet"
+    },
+    "punctuation-paren": {
+      "match": "[()]",
+      "name": "punctuation.section.parens.minuet"
+    },
+    "punctuation-other": {
+      "match": "[,;:=]",
+      "name": "punctuation.separator.minuet"
+    },
+    "identifier": {
+      "comment": "Lowercase variable name, spec section 3.5.",
+      "match": "\\b[a-z_][a-zA-Z0-9_]*\\b",
+      "name": "variable.other.minuet"
+    }
+  }
+}
